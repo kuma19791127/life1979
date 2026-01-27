@@ -7,72 +7,209 @@
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 10px; text-align: center; background: #f4f4f4; color: #333; }
-        
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 10px;
+            text-align: center;
+            background: #f4f4f4;
+            color: #333;
+        }
         /* ページ切り替え */
-        .page { display: none; }
-        .page.active { display: block; }
-
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
         /* ヘッダー：ロゴ表示エリア */
-        .header { display: flex; align-items: center; justify-content: center; padding: 10px 0; gap: 10px; }
-        .logo { height: 40px; width: auto; }
-
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0;
+            gap: 10px;
+        }
+        .logo {
+            height: 40px;
+            width: auto;
+        }
         /* スキャン画面 */
-        #scanner-container { width: 100%; max-width: 400px; margin: auto; position: relative; border: 4px solid #008D40; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 4/3; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        
+        #scanner-container {
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+            position: relative;
+            border: 4px solid #008D40;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 4/3;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         /* 黄色のスキャン枠 */
         .scan-guide {
             position: absolute;
-            top: 50%; left: 50%;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%; height: 30%; /* バーコードに合わせて少し横長に調整 */
+            width: 80%;
+            height: 30%;
+            /* バーコードに合わせて少し横長に調整 */
             border: 3px solid #FFD700;
-            box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
             z-index: 5;
             border-radius: 10px;
         }
-
-        #mask { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 141, 64, 0.7); color: white; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; z-index: 10; }
-
+        #mask {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 141, 64, 0.7);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 10;
+        }
         /* ボタン */
-        .btn { border: none; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; margin-bottom: 10px; }
-        .next-btn { background: #FFD700; color: #333; display: none; border: 2px solid #b8860b; }
-        .pay-btn { background: #008D40; color: white; }
-
-        .cart-list { margin-top: 15px; background: white; padding: 15px; border-radius: 8px; text-align: left; }
-        .total-price { font-size: 28px; font-weight: bold; color: #d32f2f; margin: 10px 0; text-align: right; }
-        .item-row { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
+        .btn {
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .next-btn {
+            background: #FFD700;
+            color: #333;
+            display: none;
+            border: 2px solid #b8860b;
+        }
+        .pay-btn {
+            background: #008D40;
+            color: white;
+        }
+        .cart-list {
+            margin-top: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .total-price {
+            font-size: 28px;
+            font-weight: bold;
+            color: #d32f2f;
+            margin: 10px 0;
+            text-align: right;
+        }
+        .item-row {
+            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        /* 支払い方法選択モーダル */
+        #payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+        }
+        .pay-option {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            transition: 0.2s;
+        }
+        .pay-option:hover {
+            background: #f0f8ff;
+            border-color: #008D40;
+        }
+        .pay-option img,
+        .pay-option span.icon {
+            width: 40px;
+            margin-right: 15px;
+            font-size: 24px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-
+    <!-- 支払い選択モーダル -->
+    <div id="payment-modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:#008D40;">支払い方法を選択</h3>
+            <div class="pay-option" onclick="selectPaymentMethod('credit')">
+                <span class="icon">💳</span> クレジットカード
+            </div>
+            <div class="pay-option" onclick="selectPaymentMethod('paypay')">
+                <span class="icon" style="color:#bf0000;">P</span> PayPay
+            </div>
+            <div class="pay-option" onclick="selectPaymentMethod('applepay')">
+                <span class="icon">🍎</span> Apple Pay
+            </div>
+            <button onclick="document.getElementById('payment-modal').style.display='none'"
+                style="margin-top:10px; padding:10px; border:none; background:#ccc; border-radius:4px; width:100%;">閉じる</button>
+        </div>
+    </div>
     <div id="page-scan" class="page active">
         <div class="header">
-            <img src="2026-01-22 200607.png" alt="ライフ" class="logo" onerror="this.src='https://placehold.jp/24/008d40/ffffff/100x40.png?text=LIFE'">
+            <img src="2026-01-22 200607.png" alt="ライフ" class="logo"
+                onerror="this.src='https://placehold.jp/24/008d40/ffffff/100x40.png?text=LIFE'">
             <h2 style="color: #008D40; margin: 0;">モバイル レジ</h2>
         </div>
-
         <div id="scanner-container">
             <video id="video"></video>
             <div class="scan-guide"></div>
             <div id="mask">スキャン完了</div>
         </div>
-
         <div style="margin-top: 15px;">
             <button id="btn-next" class="btn next-btn" onclick="resumeScan()">✅ 確定：次をスキャン</button>
             <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ</button>
         </div>
-
         <div class="cart-list">
             <div class="total-price">合計: ¥<span id="total-display">0</span></div>
             <div id="items"></div>
         </div>
     </div>
-
     <div id="page-payment" class="page">
         <div class="header">
-            <img src="2026-01-22 200607.png" alt="ライフ" class="logo" onerror="this.src='https://placehold.jp/24/008d40/ffffff/100x40.png?text=LIFE'">
+            <img src="2026-01-22 200607.png" alt="ライフ" class="logo"
+                onerror="this.src='https://placehold.jp/24/008d40/ffffff/100x40.png?text=LIFE'">
             <h2 style="color: #008D40; margin: 0;">決済</h2>
         </div>
         <div class="cart-list" style="text-align: center; padding: 30px 15px;">
@@ -85,7 +222,7 @@
             <button class="btn" style="background:#ccc;" onclick="backToScan()">戻る</button>
         </div>
     </div>
-
+    <script src="products.js"></script>
     <script>
         // --- バーコード限定の設定 ---
         const hints = new Map();
@@ -95,25 +232,75 @@
             ZXing.BarcodeFormat.CODE_128 // その他のバーコード形式
         ];
         hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-
         // ヒントを指定してリーダーを初期化
         const codeReader = new ZXing.BrowserMultiFormatReader(hints);
-        
         let total = 0;
         let isPaused = false;
-        const priceMap = { "4977634803472": 322 };
-
+        let cartItems = []; // カートの商品管理用
+        // --- Mock APIs ---
+        // 1. Product Info API Mock
+        async function mockProductApi(janCode) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // products.js で定義された productMaster を参照
+                    if (typeof productMaster !== 'undefined' && productMaster[janCode]) {
+                        resolve({ janCode, ...productMaster[janCode] });
+                    } else {
+                        // 未登録商品はデフォルト値で返す
+                        resolve({
+                            janCode,
+                            name: "未登録商品",
+                            price: 200,
+                            category: "不明"
+                        });
+                    }
+                }, 500); // 500ms delay
+            });
+        }
+        // 2. Payment Init API Mock (Updated for GMO Mock)
+        async function mockPaymentInitApi(cartData, totalAmount) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const txId = "tx_" + Math.random().toString(36).substr(2, 9);
+                    // GMOモック画面へのURLを生成
+                    // 実際の実装では、ここでGMOのAPIを叩いて決済URLを取得します
+                    const paymentUrl = `gmo_payment_mock.html?amount=${totalAmount}&txId=${txId}`;
+                    resolve({
+                        transactionId: txId,
+                        paymentUrl: paymentUrl,
+                        status: "PENDING"
+                    });
+                }, 800);
+            });
+        }
+        // 3. Payment Status API Mock
+        // 呼び出すたびに完了する確率を上げていく簡易ロジック
+        let pollCount = 0;
+        async function mockPaymentStatusApi(transactionId) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    pollCount++;
+                    // 3回目以降に完了とする
+                    const status = pollCount > 2 ? "COMPLETED" : "PENDING";
+                    const authCode = status === "COMPLETED" ? Math.floor(100000 + Math.random() * 900000) : null;
+                    resolve({
+                        transactionId,
+                        status,
+                        authCode
+                    });
+                }, 500);
+            });
+        }
+        // ----------------
         async function startScanner() {
             try {
                 const videoInputDevices = await codeReader.listVideoInputDevices();
-                
                 // 背面カメラ（Rear/Back）を優先的に探す
-                const backCamera = videoInputDevices.find(device => 
-                    device.label.toLowerCase().includes('back') || 
+                const backCamera = videoInputDevices.find(device =>
+                    device.label.toLowerCase().includes('back') ||
                     device.label.toLowerCase().includes('rear')
                 );
                 const deviceId = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
-
                 codeReader.decodeFromVideoDevice(deviceId, 'video', (result, err) => {
                     if (result && !isPaused) {
                         onScanSuccess(result.text);
@@ -128,51 +315,111 @@
                 alert("カメラにアクセスできません。設定を確認してください。");
             }
         }
-
-        function onScanSuccess(code) {
+        async function onScanSuccess(code) {
+            if (isPaused) return; // 二重読み取り防止
             isPaused = true;
-            document.getElementById('mask').style.display = 'flex';
-            document.getElementById('btn-next').style.display = 'block';
-            document.getElementById('btn-go-pay').style.display = 'none';
-
-            const price = priceMap[code] || 200; // マップにない場合は200円（仮）
-            total += price;
-            
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.innerHTML = `<span>商品: ${code}</span><span>¥${price}</span>`;
-            document.getElementById('items').prepend(row);
-            document.getElementById('total-display').innerText = total.toLocaleString();
-
-            if (navigator.vibrate) navigator.vibrate(100);
+            const mask = document.getElementById('mask');
+            mask.innerText = "商品情報 問い合わせ中...";
+            mask.style.display = 'flex';
+            try {
+                // API呼び出し
+                const product = await mockProductApi(code);
+                mask.innerText = "スキャン完了";
+                document.getElementById('btn-next').style.display = 'block';
+                document.getElementById('btn-go-pay').style.display = 'none';
+                total += product.price;
+                cartItems.push(product); // カート保存
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                // 特売なら赤字などで強調も可能
+                const nameDisplay = product.name.length > 10 ? product.name.substr(0, 10) + "..." : product.name;
+                row.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                        <span style="font-size:14px; color:#555;">${code}</span>
+                        <span>${nameDisplay}</span>
+                    </div>
+                    <span style="font-weight:bold;">¥${product.price.toLocaleString()}</span>
+                `;
+                document.getElementById('items').prepend(row);
+                document.getElementById('total-display').innerText = total.toLocaleString();
+                if (navigator.vibrate) navigator.vibrate(100);
+            } catch (error) {
+                alert("商品情報の取得に失敗しました");
+                resumeScan(); // エラー時は復帰
+            }
         }
-
         function resumeScan() {
             isPaused = false;
             document.getElementById('mask').style.display = 'none';
             document.getElementById('btn-next').style.display = 'none';
             document.getElementById('btn-go-pay').style.display = 'block';
         }
-
-        function goToPayment() {
+        async function goToPayment() {
             if (total === 0) return alert("商品がありません");
-            document.getElementById('page-scan').classList.remove('active');
-            document.getElementById('page-payment').classList.add('active');
-            document.getElementById('final-total').innerText = total.toLocaleString();
-            document.getElementById('qr-code').innerHTML = "";
-            new QRCode(document.getElementById('qr-code'), {
-                text: `paypay://payment?amount=${total}`,
-                width: 200, height: 200
-            });
+            // UI更新: 処理中表示
+            const btn = document.getElementById('btn-go-pay');
+            btn.innerText = "決済画面へ移動中...";
+            btn.disabled = true;
+            try {
+                // 決済初期化 (URL取得)
+                const initRes = await mockPaymentInitApi(cartItems, total);
+                // 画面遷移（リンクタイプ決済）
+                window.location.href = initRes.paymentUrl;
+            } catch (e) {
+                console.error(e);
+                alert("決済開始に失敗しました");
+                btn.innerText = "合計金額で決済へ";
+                btn.disabled = false;
+            }
         }
-
-        function backToScan() {
-            document.getElementById('page-payment').classList.remove('active');
-            document.getElementById('page-scan').classList.add('active');
+        // 決済画面からの戻り処理 (Page Load時)
+        function checkPaymentReturn() {
+            const params = new URLSearchParams(window.location.search);
+            const result = params.get('result');
+            if (result === 'success') {
+                const amount = params.get('amount');
+                // 決済完了画面を表示
+                document.getElementById('page-scan').classList.remove('active');
+                document.getElementById('page-payment').classList.add('active');
+                document.getElementById('final-total').innerText = Number(amount).toLocaleString();
+                // 完了UIの調整
+                const qrContainer = document.getElementById('qr-code');
+                qrContainer.innerHTML = "";
+                const statusMsg = document.createElement('p');
+                statusMsg.style.color = "#008D40";
+                statusMsg.style.fontWeight = "bold";
+                statusMsg.style.fontSize = "18px";
+                statusMsg.innerText = "クレジットカード決済が完了しました";
+                qrContainer.appendChild(statusMsg);
+                const doneBtn = document.querySelector('#page-payment .pay-btn');
+                doneBtn.innerText = "✅ レシート発行して終了";
+                doneBtn.style.background = "#FFD700";
+                doneBtn.style.color = "#333";
+                doneBtn.onclick = () => {
+                    window.location.href = window.location.pathname; // パラメータ消してリロード
+                };
+            } else if (result === 'cancel') {
+                alert("決済がキャンセルされました");
+                // スキャン画面のまま（何もしない）
+            }
         }
-
-        // ページ読み込み時にスキャナー起動
+        // デバッグ用：手動入力
+        function manualInput() {
+            const code = prompt("JANコードを入力してください（デバッグ用）", "4977634803472");
+            if (code) {
+                onScanSuccess(code);
+            }
+        }
+        // 初期化処理
         startScanner();
+        checkPaymentReturn();
     </script>
+    <!-- デバッグ用ボタン -->
+    <div style="position:fixed; bottom:10px; right:10px; opacity:0.7;">
+        <button onclick="manualInput()" style="padding:10px; font-size:12px;">🛠 手動入力</button>
+    </div>
 </body>
+</html>
+</body>
+
 </html>
