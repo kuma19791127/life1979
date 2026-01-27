@@ -257,14 +257,82 @@
                 }, 500); // 500ms delay
             });
         }
-        // 2. Payment Init API Mock (Updated for GMO Mock)
+        async function goToPayment() {
+            if (total === 0) return alert("商品がありません");
+            // 支払い方法選択モーダルを表示
+            document.getElementById('payment-modal').style.display = 'flex';
+        }
+        async function selectPaymentMethod(method) {
+            // モーダルを閉じる
+            document.getElementById('payment-modal').style.display = 'none';
+            // UI遷移: 決済画面へ
+            document.getElementById('page-scan').classList.remove('active');
+            document.getElementById('page-payment').classList.add('active');
+            document.getElementById('final-total').innerText = total.toLocaleString();
+            const qrContainer = document.getElementById('qr-code');
+            qrContainer.innerHTML = ""; // クリア
+            if (method === 'credit') {
+                // GMO (Link Type)
+                qrContainer.innerHTML = "決済画面へ移動中...";
+                try {
+                    const initRes = await mockPaymentInitApi(cartItems, total);
+                    window.location.href = initRes.paymentUrl;
+                } catch (e) {
+                    alert("決済開始に失敗しました");
+                    backToScan();
+                }
+            } else if (method === 'paypay') {
+                // PayPay (QR Code)
+                new QRCode(qrContainer, {
+                    text: `paypay://payment?amount=${total}`,
+                    width: 200, height: 200
+                });
+                const msg = document.createElement('p');
+                msg.innerText = "PayPayでスキャンしてください";
+                msg.className = "payment-msg";
+                qrContainer.after(msg);
+                // 簡易ポーリング開始（デモ用）
+                startDummyPolling("PayPay決済が完了しました");
+            } else if (method === 'applepay') {
+                // Apple Pay (Mock Animation)
+                qrContainer.innerHTML = `
+                    <div style="font-size: 60px;">🍎</div>
+                    <p style="font-weight:bold;">iPhoneをリーダーにかざしてください</p>
+                    <div class="processing-ring"></div>
+                `;
+                // 簡易ポーリング開始（デモ用）
+                startDummyPolling("Apple Pay決済が完了しました");
+            }
+        }
+        // 2. Payment Init API (Simulating AWS Backend Call)
         async function mockPaymentInitApi(cartData, totalAmount) {
+            // --- 本番/テスト環境用 (AWSバックエンド経由) ---
+            // デプロイ後に以下のコメントアウトを解除し、URLを設定してください
+            /*
+            const response = await fetch('YOUR_AWS_API_GATEWAY_URL', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    amount: totalAmount, 
+                    orderId: "order_" + Date.now() 
+                })
+            });
+            if (!response.ok) throw new Error("Payment Init Failed");
+            return await response.json();
+            */
+            // --- デモ用：フロントエンドでの簡易シミュレーション ---
             return new Promise(resolve => {
                 setTimeout(() => {
-                    const txId = "tx_" + Math.random().toString(36).substr(2, 9);
-                    // GMOモック画面へのURLを生成
-                    // 実際の実装では、ここでGMOのAPIを叩いて決済URLを取得します
+                    const txId = "order_" + Date.now().toString().substr(-6);
+                    // GMO Link Type Plus のURL生成ロジックは Backend (AWS Lambda) に実装済みです。
+                    // ここでは、そのバックエンドが返すはずの「生成された決済URL」をシミュレートしています。
+                    // 実際には AWS Lambda が https://stg.link.mul-pay.jp/... を生成して返しますが、
+                    // デモ用に、ローカルのモック画面へ遷移させます。
                     const paymentUrl = `gmo_payment_mock.html?amount=${totalAmount}&txId=${txId}`;
+                    console.log("[Mock] Backend would generate Link Plus URL for:", {
+                        amount: totalAmount,
+                        txId: txId
+                    });
                     resolve({
                         transactionId: txId,
                         paymentUrl: paymentUrl,
@@ -354,23 +422,32 @@
             document.getElementById('btn-next').style.display = 'none';
             document.getElementById('btn-go-pay').style.display = 'block';
         }
-        async function goToPayment() {
-            if (total === 0) return alert("商品がありません");
-            // UI更新: 処理中表示
-            const btn = document.getElementById('btn-go-pay');
-            btn.innerText = "決済画面へ移動中...";
-            btn.disabled = true;
-            try {
-                // 決済初期化 (URL取得)
-                const initRes = await mockPaymentInitApi(cartItems, total);
-                // 画面遷移（リンクタイプ決済）
-                window.location.href = initRes.paymentUrl;
-            } catch (e) {
-                console.error(e);
-                alert("決済開始に失敗しました");
-                btn.innerText = "合計金額で決済へ";
-                btn.disabled = false;
-            }
+        function startDummyPolling(successMsg) {
+            let count = 0;
+            const interval = setInterval(() => {
+                count++;
+                if (count > 3) { // 3回ポーリング(約6秒)後に完了
+                    clearInterval(interval);
+                    const qrContainer = document.getElementById('qr-code');
+                    // 以前のメッセージを消す
+                    const oldMsg = document.querySelector('.payment-msg');
+                    if (oldMsg) oldMsg.remove();
+                    const statusMsg = document.createElement('p');
+                    statusMsg.style.color = "#008D40";
+                    statusMsg.style.fontWeight = "bold";
+                    statusMsg.style.fontSize = "18px";
+                    statusMsg.innerText = successMsg;
+                    qrContainer.appendChild(statusMsg);
+                    // 完了ボタン有効化
+                    const doneBtn = document.querySelector('#page-payment .pay-btn');
+                    doneBtn.innerText = "✅ レシート発行して終了";
+                    doneBtn.style.background = "#FFD700";
+                    doneBtn.style.color = "#333";
+                    doneBtn.onclick = () => {
+                        window.location.href = window.location.pathname;
+                    };
+                }
+            }, 2000);
         }
         // 決済画面からの戻り処理 (Page Load時)
         function checkPaymentReturn() {
@@ -419,7 +496,4 @@
         <button onclick="manualInput()" style="padding:10px; font-size:12px;">🛠 手動入力</button>
     </div>
 </body>
-</html>
-</body>
-
 </html>
