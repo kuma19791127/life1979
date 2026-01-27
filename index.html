@@ -274,12 +274,14 @@
             if (method === 'credit') {
                 // GMO (Link Type)
                 qrContainer.innerHTML = "決済画面へ移動中...";
-                try {
+               try {
                     const initRes = await mockPaymentInitApi(cartItems, total);
                     window.location.href = initRes.paymentUrl;
-                } catch (e) {
+               } catch (e)     {
                     alert("決済開始に失敗しました");
-                    backToScan();
+                    // エラー時にスキャン画面に戻す処理
+                    document.getElementById('page-scan').classList.add('active');
+                    document.getElementById('page-payment').classList.remove('active');
                 }
             } else if (method === 'paypay') {
                 // PayPay (QR Code)
@@ -497,4 +499,5 @@
     </div>
 </body>
 </html>
+
 
