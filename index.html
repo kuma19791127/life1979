@@ -488,6 +488,8 @@
             document.getElementById('qr-code').innerHTML = "";
             document.getElementById('payment-modal').style.display = 'none';
         }
+        // 2. GMO Link Type Plus URL Generation
+        // (Backend logic - handled in AWS Lambda)
         // デバッグ用：手動入力
         function manualInput() {
             const code = prompt("JANコードを入力してください（デバッグ用）", "4977634803472");
@@ -495,8 +497,26 @@
                 onScanSuccess(code);
             }
         }
-        // 初期化処理
-        startScanner();
+        // --- 初期化フロー ---
+        // ブラウザの自動再生ポリシー(バイブレーション/音声)対策として
+        // ユーザーの明示的な操作(タップ)があってからカメラを開始する
+        function initApp() {
+            const mask = document.getElementById('mask');
+            mask.style.display = 'flex';
+            mask.style.background = 'rgba(0,0,0,0.8)';
+            mask.innerHTML = '<div style="cursor:pointer; padding:20px; border:2px solid #FFD700; border-radius:8px;">📷 タップして利用を開始する</div>';
+            // マスク全体をクリックで開始
+            mask.onclick = () => {
+                // 初回インタラクションでポリシー解除
+                if (navigator.vibrate) try { navigator.vibrate(0); } catch (e) { }
+                mask.style.display = 'none';
+                mask.onclick = null; // ハンドラ解除
+                mask.innerText = "スキャン完了"; // 文言戻しておく
+                startScanner();
+            };
+        }
+        // アプリ起動
+        initApp();
         checkPaymentReturn();
     </script>
     <!-- デバッグ用ボタン -->
@@ -505,3 +525,9 @@
     </div>
 </body>
 </html>
+    <div style="position:fixed; bottom:10px; right:10px; opacity:0.7;">
+        <button onclick="manualInput()" style="padding:10px; font-size:12px;">🛠 手動入力</button>
+    </div>
+</body>
+</html>
+
