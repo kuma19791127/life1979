@@ -199,7 +199,7 @@
         </div>
         <div style="margin-top: 15px;">
             <button id="btn-next" class="btn next-btn" onclick="resumeScan()">✅ 確定：次をスキャン</button>
-            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ</button>
+            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ (v2)</button>
         </div>
         <div class="cart-list">
             <div class="total-price">合計: ¥<span id="total-display">0</span></div>
@@ -314,8 +314,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         amount: totalAmount,
-                        // GMO often forbids underscores. Using hyphen instead.
-                        orderId: "order-" + Date.now()
+                        // GMO format fix: Pure alphanumeric, no symbols
+                        orderId: "T" + Date.now()
                     })
                 });
                 if (!response.ok) {
@@ -510,7 +510,6 @@
     </div>
 </body>
 </html>
-    </div>
-</body>
 </html>
+
 
