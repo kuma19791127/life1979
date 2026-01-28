@@ -304,22 +304,24 @@
                 startDummyPolling("Apple Pay決済が完了しました");
             }
         }
-        // 2. Payment Init API (Simulating AWS Backend Call)
+        // 2. Payment Init API (AWS Backend Call)
         async function mockPaymentInitApi(cartData, totalAmount) {
-            // --- 本番/テスト環境用 (AWSバックエンド経由) ---
-            // デプロイ後に以下のコメントアウトを解除し、URLを設定してください
-            /*
-            const response = await fetch('YOUR_AWS_API_GATEWAY_URL', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    amount: totalAmount, 
-                    orderId: "order_" + Date.now() 
+            // --- AWSバックエンド経由 (GMO Link Type Plus) ---
+            // コメントアウトを解除し、いただいたAWSのURLを設定しました
+            const AWS_URL = 'https://wu6pj4fmg3.execute-api.us-east-1.amazonaws.com/default/gmo-payment-url-generator';
+            try {
+                const response = await fetch(AWS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: totalAmount,
+                        // orderIdを一意にするためタイムスタンプを使用
+                        orderId: "order_" + Date.now()
                 })
             });
             if (!response.ok) throw new Error("Payment Init Failed");
             return await response.json();
-            */
+            /
             // --- デモ用：フロントエンドでの簡易シミュレーション ---
             return new Promise(resolve => {
                 setTimeout(() => {
@@ -525,9 +527,6 @@
     </div>
 </body>
 </html>
-    <div style="position:fixed; bottom:10px; right:10px; opacity:0.7;">
-        <button onclick="manualInput()" style="padding:10px; font-size:12px;">🛠 手動入力</button>
-    </div>
-</body>
-</html>
+   
+
 
