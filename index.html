@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフ モバイルレジ - バーコード専用</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -121,71 +120,9 @@
             display: flex;
             justify-content: space-between;
         }
-        /* 支払い方法選択モーダル */
-        #payment-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
-        }
-        .pay-option {
-            display: flex;
-            align-items: center;
-            justify-content: start;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 18px;
-            transition: 0.2s;
-        }
-        .pay-option:hover {
-            background: #f0f8ff;
-            border-color: #008D40;
-        }
-        .pay-option img,
-        .pay-option span.icon {
-            width: 40px;
-            margin-right: 15px;
-            font-size: 24px;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
-    <!-- 支払い選択モーダル -->
-    <div id="payment-modal">
-        <div class="modal-content">
-            <h3 style="margin-top:0; color:#008D40;">支払い方法を選択</h3>
-            <div class="pay-option" onclick="selectPaymentMethod('credit')">
-                <span class="icon">💳</span> クレジットカード
-            </div>
-            <div class="pay-option" onclick="selectPaymentMethod('paypay')">
-                <span class="icon" style="color:#bf0000;">P</span> PayPay
-            </div>
-            <div class="pay-option" onclick="selectPaymentMethod('applepay')">
-                <span class="icon">🍎</span> Apple Pay
-            </div>
-            <button onclick="document.getElementById('payment-modal').style.display='none'"
-                style="margin-top:10px; padding:10px; border:none; background:#ccc; border-radius:4px; width:100%;">閉じる</button>
-        </div>
-    </div>
     <div id="page-scan" class="page active">
         <div class="header">
             <img src="2026-01-22 200607.png" alt="ライフ" class="logo"
@@ -199,13 +136,14 @@
         </div>
         <div style="margin-top: 15px;">
             <button id="btn-next" class="btn next-btn" onclick="resumeScan()">✅ 確定：次をスキャン</button>
-            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ (v2)</button>
+            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ</button>
         </div>
         <div class="cart-list">
             <div class="total-price">合計: ¥<span id="total-display">0</span></div>
             <div id="items"></div>
         </div>
     </div>
+    <!-- 決済ページ（戻ってきた時用） -->
     <div id="page-payment" class="page">
         <div class="header">
             <img src="2026-01-22 200607.png" alt="ライフ" class="logo"
@@ -219,7 +157,6 @@
             </div>
             <div id="qr-code" style="display: flex; justify-content: center; margin: 20px 0;"></div>
             <button class="btn pay-btn" onclick="location.reload()">✅ 決済完了を確認</button>
-            <button class="btn" style="background:#ccc;" onclick="backToScan()">戻る</button>
         </div>
     </div>
     <script src="products.js"></script>
@@ -257,52 +194,23 @@
                 }, 500); // 500ms delay
             });
         }
+        // 決済ボタンを押した時の処理（自動的にGMOリンクへ移動）
         async function goToPayment() {
             if (total === 0) return alert("商品がありません");
-            // 支払い方法選択モーダルを表示
-            document.getElementById('payment-modal').style.display = 'flex';
-        }
-        async function selectPaymentMethod(method) {
-            // モーダルを閉じる
-            document.getElementById('payment-modal').style.display = 'none';
-            // UI遷移: 決済画面へ
-            document.getElementById('page-scan').classList.remove('active');
-            document.getElementById('page-payment').classList.add('active');
-            document.getElementById('final-total').innerText = total.toLocaleString();
-            const qrContainer = document.getElementById('qr-code');
-            qrContainer.innerHTML = ""; // クリア
-            if (method === 'credit') {
-                // GMO (Link Type)
-                qrContainer.innerHTML = "決済画面へ移動中...";
-                try {
-                    const initRes = await mockPaymentInitApi(cartItems, total);
-                    window.location.href = initRes.paymentUrl;
-                } catch (e) {
-                    console.error(e);
-                    alert("決済開始に失敗しました: " + e.message);
-                    backToScan();
-                }
-            } else if (method === 'paypay') {
-                // PayPay (QR Code)
-                new QRCode(qrContainer, {
-                    text: `paypay://payment?amount=${total}`,
-                    width: 200, height: 200
-                });
-                const msg = document.createElement('p');
-                msg.innerText = "PayPayでスキャンしてください";
-                msg.className = "payment-msg";
-                qrContainer.after(msg);
-                // 簡易ポーリング開始（デモ用）
-                startDummyPolling("PayPay決済が完了しました");
-            } else if (method === 'applepay') {
-                // Apple Pay (Mock Animation)
-                qrContainer.innerHTML = `
-                    <div style="font-size: 60px;">🍎</div>
-                    <p style="font-weight:bold;">iPhoneをリーダーにかざしてください</p>
-                    <div class="processing-ring"></div>
-                `;
-                // 簡易ポーリング開始（デモ用）
-                startDummyPolling("Apple Pay決済が完了しました");
+            // UI遷移: ローディング表示
+            const mask = document.getElementById('mask');
+            mask.innerText = "決済ページへ移動中...";
+            mask.style.display = 'flex';
+            try {
+                // GMO Link Type Plus のURLを取得
+                const initRes = await mockPaymentInitApi(cartItems, total);
+                // 取得したURLへリダイレクト
+                window.location.href = initRes.paymentUrl;
+            } catch (e) {
+                console.error(e);
+                alert("決済開始に失敗しました: " + e.message);
+                // エラー時はスキャン画面に戻す
+                mask.style.display = 'none';
             }
         }
         // 2. Payment Init API (AWS Backend Call)
@@ -327,24 +235,6 @@
                 alert("AWS接続エラー: " + e.message);
                 throw e; // エラーを上に投げて呼び出し元で処理させる
             }
-        }
-        // 3. Payment Status API Mock
-        // 呼び出すたびに完了する確率を上げていく簡易ロジック
-        let pollCount = 0;
-        async function mockPaymentStatusApi(transactionId) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    pollCount++;
-                    // 3回目以降に完了とする
-                    const status = pollCount > 2 ? "COMPLETED" : "PENDING";
-                    const authCode = status === "COMPLETED" ? Math.floor(100000 + Math.random() * 900000) : null;
-                    resolve({
-                        transactionId,
-                        status,
-                        authCode
-                    });
-                }, 500);
-            });
         }
         // ----------------
         async function startScanner() {
@@ -386,7 +276,6 @@
                 cartItems.push(product); // カート保存
                 const row = document.createElement('div');
                 row.className = 'item-row';
-                // 特売なら赤字などで強調も可能
                 const nameDisplay = product.name.length > 10 ? product.name.substr(0, 10) + "..." : product.name;
                 row.innerHTML = `
                     <div style="display:flex; flex-direction:column; align-items:flex-start;">
@@ -408,33 +297,6 @@
             document.getElementById('mask').style.display = 'none';
             document.getElementById('btn-next').style.display = 'none';
             document.getElementById('btn-go-pay').style.display = 'block';
-        }
-        function startDummyPolling(successMsg) {
-            let count = 0;
-            const interval = setInterval(() => {
-                count++;
-                if (count > 3) { // 3回ポーリング(約6秒)後に完了
-                    clearInterval(interval);
-                    const qrContainer = document.getElementById('qr-code');
-                    // 以前のメッセージを消す
-                    const oldMsg = document.querySelector('.payment-msg');
-                    if (oldMsg) oldMsg.remove();
-                    const statusMsg = document.createElement('p');
-                    statusMsg.style.color = "#008D40";
-                    statusMsg.style.fontWeight = "bold";
-                    statusMsg.style.fontSize = "18px";
-                    statusMsg.innerText = successMsg;
-                    qrContainer.appendChild(statusMsg);
-                    // 完了ボタン有効化
-                    const doneBtn = document.querySelector('#page-payment .pay-btn');
-                    doneBtn.innerText = "✅ レシート発行して終了";
-                    doneBtn.style.background = "#FFD700";
-                    doneBtn.style.color = "#333";
-                    doneBtn.onclick = () => {
-                        window.location.href = window.location.pathname;
-                    };
-                }
-            }, 2000);
         }
         // 決済画面からの戻り処理 (Page Load時)
         function checkPaymentReturn() {
@@ -466,14 +328,6 @@
                 alert("決済がキャンセルされました");
                 // スキャン画面のまま（何もしない）
             }
-        }
-        function backToScan() {
-            // ポーリング等はpayment selection内でローカル管理されているため、ここでは簡易的な戻り処理
-            document.getElementById('page-payment').classList.remove('active');
-            document.getElementById('page-scan').classList.add('active');
-            // モーダルやメッセージのクリーンアップ
-            document.getElementById('qr-code').innerHTML = "";
-            document.getElementById('payment-modal').style.display = 'none';
         }
         // デバッグ用：手動入力
         function manualInput() {
@@ -511,5 +365,6 @@
 </body>
 </html>
 </html>
+
 
 
