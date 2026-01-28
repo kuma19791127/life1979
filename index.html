@@ -1,3 +1,8 @@
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -5,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフ モバイルレジ - バーコード専用</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -120,6 +126,23 @@
             display: flex;
             justify-content: space-between;
         }
+        /* QRコード表示エリア */
+        #qr-display-area {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-instruction {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #008D40;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -136,27 +159,33 @@
         </div>
         <div style="margin-top: 15px;">
             <button id="btn-next" class="btn next-btn" onclick="resumeScan()">✅ 確定：次をスキャン</button>
-            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ</button>
+            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ (QR表示)</button>
         </div>
         <div class="cart-list">
             <div class="total-price">合計: ¥<span id="total-display">0</span></div>
             <div id="items"></div>
         </div>
     </div>
-    <!-- 決済ページ（戻ってきた時用） -->
+    <!-- 決済ページ（QRコード提示画面） -->
     <div id="page-payment" class="page">
         <div class="header">
             <img src="2026-01-22 200607.png" alt="ライフ" class="logo"
                 onerror="this.src='https://placehold.jp/24/008d40/ffffff/100x40.png?text=LIFE'">
-            <h2 style="color: #008D40; margin: 0;">決済</h2>
+            <h2 style="color: #008D40; margin: 0;">お客様ご案内</h2>
         </div>
         <div class="cart-list" style="text-align: center; padding: 30px 15px;">
             <p style="margin: 0; color: #666;">お支払い合計</p>
             <div class="total-price" style="text-align: center; font-size: 42px; margin: 10px 0;">
                 ¥<span id="final-total">0</span>
             </div>
-            <div id="qr-code" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-            <button class="btn pay-btn" onclick="location.reload()">✅ 決済完了を確認</button>
+            <!-- QRコード表示エリア -->
+            <div id="qr-display-area">
+                <div id="qrcode"></div>
+                <p class="qr-instruction">お客様のスマートフォンで<br>読み取ってください</p>
+            </div>
+            <button class="btn pay-btn" onclick="location.reload()"
+                style="margin-top: 30px; background-color: #333;">次のお客様へ (最初に戻る)</button>
+            <button class="btn" style="background:#ccc; margin-top: 10px;" onclick="backToScan()">戻る</button>
         </div>
     </div>
     <script src="products.js"></script>
@@ -165,7 +194,7 @@
         const hints = new Map();
         const formats = [
             ZXing.BarcodeFormat.EAN_13, // 13桁の標準バーコード
-            ZXing.BarcodeFormat.EAN_8,  // 8桁の短縮バーコード
+            ZXing.BarcodeFormat.EAN_8, // 8桁の短縮バーコード
             ZXing.BarcodeFormat.CODE_128 // その他のバーコード形式
         ];
         hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
@@ -194,24 +223,41 @@
                 }, 500); // 500ms delay
             });
         }
-        // 決済ボタンを押した時の処理（自動的にGMOリンクへ移動）
+        // 決済ボタンを押した時の処理（QRコード生成）
         async function goToPayment() {
             if (total === 0) return alert("商品がありません");
             // UI遷移: ローディング表示
             const mask = document.getElementById('mask');
-            mask.innerText = "決済ページへ移動中...";
+            mask.innerText = "決済QRコード作成中...";
             mask.style.display = 'flex';
             try {
                 // GMO Link Type Plus のURLを取得
                 const initRes = await mockPaymentInitApi(cartItems, total);
-                // 取得したURLへリダイレクト
-                window.location.href = initRes.paymentUrl;
+                const paymentUrl = initRes.paymentUrl;
+                // UI切り替え: 支払い画面へ
+                document.getElementById('page-scan').classList.remove('active');
+                document.getElementById('page-payment').classList.add('active');
+                document.getElementById('final-total').innerText = total.toLocaleString();
+                // QRコード生成
+                const qrContainer = document.getElementById('qrcode');
+                qrContainer.innerHTML = ""; // クリア
+                new QRCode(qrContainer, {
+                    text: paymentUrl,
+                    width: 256,
+                    height: 256,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                mask.style.display = 'none';
             } catch (e) {
                 console.error(e);
                 alert("決済開始に失敗しました: " + e.message);
                 // エラー時はスキャン画面に戻す
                 mask.style.display = 'none';
             }
+        }
+        function backToScan() {
+            document.getElementById('page-payment').classList.remove('active');
+            document.getElementById('page-scan').classList.add('active');
         }
         // 2. Payment Init API (AWS Backend Call)
         async function mockPaymentInitApi(cartData, totalAmount) {
@@ -271,7 +317,7 @@
                 const product = await mockProductApi(code);
                 mask.innerText = "スキャン完了";
                 document.getElementById('btn-next').style.display = 'block';
-                document.getElementById('btn-go-pay').style.display = 'none';
+                document.getElementById('btn-go-pay').style.display = 'block'; // 常に決済ボタンは見せておく
                 total += product.price;
                 cartItems.push(product); // カート保存
                 const row = document.createElement('div');
@@ -296,38 +342,7 @@
             isPaused = false;
             document.getElementById('mask').style.display = 'none';
             document.getElementById('btn-next').style.display = 'none';
-            document.getElementById('btn-go-pay').style.display = 'block';
-        }
-        // 決済画面からの戻り処理 (Page Load時)
-        function checkPaymentReturn() {
-            const params = new URLSearchParams(window.location.search);
-            const result = params.get('result');
-            if (result === 'success') {
-                const amount = params.get('amount');
-                // 決済完了画面を表示
-                document.getElementById('page-scan').classList.remove('active');
-                document.getElementById('page-payment').classList.add('active');
-                document.getElementById('final-total').innerText = Number(amount).toLocaleString();
-                // 完了UIの調整
-                const qrContainer = document.getElementById('qr-code');
-                qrContainer.innerHTML = "";
-                const statusMsg = document.createElement('p');
-                statusMsg.style.color = "#008D40";
-                statusMsg.style.fontWeight = "bold";
-                statusMsg.style.fontSize = "18px";
-                statusMsg.innerText = "クレジットカード決済が完了しました";
-                qrContainer.appendChild(statusMsg);
-                const doneBtn = document.querySelector('#page-payment .pay-btn');
-                doneBtn.innerText = "✅ レシート発行して終了";
-                doneBtn.style.background = "#FFD700";
-                doneBtn.style.color = "#333";
-                doneBtn.onclick = () => {
-                    window.location.href = window.location.pathname; // パラメータ消してリロード
-                };
-            } else if (result === 'cancel') {
-                alert("決済がキャンセルされました");
-                // スキャン画面のまま（何もしない）
-            }
+            // document.getElementById('btn-go-pay').style.display = 'block';
         }
         // デバッグ用：手動入力
         function manualInput() {
@@ -356,7 +371,6 @@
         }
         // アプリ起動
         initApp();
-        checkPaymentReturn();
     </script>
     <!-- デバッグ用ボタン -->
     <div style="position:fixed; bottom:10px; right:10px; opacity:0.7;">
@@ -364,7 +378,3 @@
     </div>
 </body>
 </html>
-</html>
-
-
-
