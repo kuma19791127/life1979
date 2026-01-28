@@ -278,7 +278,8 @@
                     const initRes = await mockPaymentInitApi(cartItems, total);
                     window.location.href = initRes.paymentUrl;
                 } catch (e) {
-                    alert("決済開始に失敗しました");
+                    console.error(e);
+                    alert("決済開始に失敗しました: " + e.message);
                     backToScan();
                 }
             } else if (method === 'paypay') {
@@ -306,8 +307,6 @@
         }
         // 2. Payment Init API (AWS Backend Call)
         async function mockPaymentInitApi(cartData, totalAmount) {
-            // --- AWSバックエンド経由 (GMO Link Type Plus) ---
-            // コメントアウトを解除し、いただいたAWSのURLを設定しました
             const AWS_URL = 'https://wu6pj4fmg3.execute-api.us-east-1.amazonaws.com/default/gmo-payment-url-generator';
             try {
                 const response = await fetch(AWS_URL, {
@@ -315,33 +314,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         amount: totalAmount,
-                        // orderIdを一意にするためタイムスタンプを使用
                         orderId: "order_" + Date.now()
-                })
-            });
-            if (!response.ok) throw new Error("Payment Init Failed");
-            return await response.json();
-            /
-            // --- デモ用：フロントエンドでの簡易シミュレーション ---
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const txId = "order_" + Date.now().toString().substr(-6);
-                    // GMO Link Type Plus のURL生成ロジックは Backend (AWS Lambda) に実装済みです。
-                    // ここでは、そのバックエンドが返すはずの「生成された決済URL」をシミュレートしています。
-                    // 実際には AWS Lambda が https://stg.link.mul-pay.jp/... を生成して返しますが、
-                    // デモ用に、ローカルのモック画面へ遷移させます。
-                    const paymentUrl = `gmo_payment_mock.html?amount=${totalAmount}&txId=${txId}`;
-                    console.log("[Mock] Backend would generate Link Plus URL for:", {
-                        amount: totalAmount,
-                        txId: txId
-                    });
-                    resolve({
-                        transactionId: txId,
-                        paymentUrl: paymentUrl,
-                        status: "PENDING"
-                    });
-                }, 800);
-            });
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error("AWS API Connection Failed: " + response.status);
+                }
+                return await response.json();
+            } catch (e) {
+                console.warn("AWS Connection failed, falling back to mock.", e);
+                alert("AWS接続エラー: " + e.message);
+                throw e; // エラーを上に投げて呼び出し元で処理させる
+            }
         }
         // 3. Payment Status API Mock
         // 呼び出すたびに完了する確率を上げていく簡易ロジック
@@ -490,8 +474,6 @@
             document.getElementById('qr-code').innerHTML = "";
             document.getElementById('payment-modal').style.display = 'none';
         }
-        // 2. GMO Link Type Plus URL Generation
-        // (Backend logic - handled in AWS Lambda)
         // デバッグ用：手動入力
         function manualInput() {
             const code = prompt("JANコードを入力してください（デバッグ用）", "4977634803472");
@@ -527,6 +509,8 @@
     </div>
 </body>
 </html>
+</html>
    
+
 
 
