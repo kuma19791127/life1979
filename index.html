@@ -314,7 +314,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         amount: totalAmount,
-                        orderId: "order_" + Date.now()
+                        // GMO often forbids underscores. Using hyphen instead.
+                        orderId: "order-" + Date.now()
                     })
                 });
                 if (!response.ok) {
@@ -509,3 +510,7 @@
     </div>
 </body>
 </html>
+    </div>
+</body>
+</html>
+
