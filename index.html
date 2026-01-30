@@ -1,51 +1,126 @@
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ライフ モバイルレジ - バーコード専用</title>
+    <title>モバイルレジシステム</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- 認証・設定ファイルの読み込み -->
+    <script src="auth_config.js"></script>
     <style>
+        :root {
+            /* 基本デザインはライフ風グリーンで統一 */
+            --theme-color: #008D40;
+            --secondary-color: #FFD700;
+            --text-color: #333;
+            --bg-color: #f4f4f4;
+        }
         body {
             font-family: sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 0;
             text-align: center;
-            background: #f4f4f4;
-            color: #333;
+            background: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        /* 共通ヘッダー */
+        .app-header {
+            background: var(--theme-color);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .header-logo {
+            font-size: 20px;
+        }
+        .header-info {
+            font-size: 12px;
+            text-align: right;
         }
         /* ページ切り替え */
         .page {
             display: none;
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
         }
         .page.active {
             display: block;
         }
-        /* ヘッダー：ロゴ表示エリア */
-        .header {
-            display: flex;
-            align-items: center;
+        /* ログイン画面 */
+        #page-login {
+            display: none;
+            /* 初期状態 */
             justify-content: center;
-            padding: 10px 0;
+            align-items: center;
+            flex-direction: column;
+            height: 100%;
+            background: white;
+        }
+        #page-login.active {
+            display: flex;
+        }
+        .login-box {
+            width: 80%;
+            max-width: 350px;
+            padding: 30px;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .login-btn {
+            background: var(--theme-color);
+            color: white;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        /* 店舗選択メニュー (Dropdown) */
+        .store-selector-bar {
+            background: #fff;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
             gap: 10px;
         }
-        .logo {
-            height: 40px;
-            width: auto;
+        select {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
         }
         /* スキャン画面 */
         #scanner-container {
             width: 100%;
             max-width: 400px;
-            margin: auto;
+            margin: 20px auto;
             position: relative;
-            border: 4px solid #008D40;
+            border: 4px solid var(--theme-color);
             border-radius: 12px;
             overflow: hidden;
             background: #000;
@@ -56,7 +131,7 @@
             height: 100%;
             object-fit: cover;
         }
-        /* 黄色のスキャン枠 */
+        /* スキャン枠 */
         .scan-guide {
             position: absolute;
             top: 50%;
@@ -64,8 +139,7 @@
             transform: translate(-50%, -50%);
             width: 80%;
             height: 30%;
-            /* バーコードに合わせて少し横長に調整 */
-            border: 3px solid #FFD700;
+            border: 3px solid var(--secondary-color);
             box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
             z-index: 5;
             border-radius: 10px;
@@ -77,7 +151,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 141, 64, 0.7);
+            background: rgba(0, 0, 0, 0.7);
             color: white;
             justify-content: center;
             align-items: center;
@@ -96,29 +170,23 @@
             cursor: pointer;
             margin-bottom: 10px;
         }
-        .next-btn {
-            background: #FFD700;
-            color: #333;
-            display: none;
-            border: 2px solid #b8860b;
-        }
         .pay-btn {
-            background: #008D40;
+            background: var(--theme-color);
             color: white;
         }
+        .next-btn {
+            background: var(--secondary-color);
+            color: #333;
+            display: none;
+        }
+        /* リスト */
         .cart-list {
             margin-top: 15px;
             background: white;
             padding: 15px;
             border-radius: 8px;
             text-align: left;
-        }
-        .total-price {
-            font-size: 28px;
-            font-weight: bold;
-            color: #d32f2f;
-            margin: 10px 0;
-            text-align: right;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .item-row {
             border-bottom: 1px solid #eee;
@@ -136,21 +204,39 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-        }
-        .qr-instruction {
-            margin-top: 15px;
-            font-weight: bold;
-            color: #008D40;
-            font-size: 18px;
+            border: 2px dashed var(--theme-color);
         }
     </style>
 </head>
 <body>
-    <div id="page-scan" class="page active">
-        <div class="header">
-            <img src="2026-01-22 200607.png" alt="ライフ" class="logo"
-                onerror="this.src='https://placehold.jp/24/008d40/ffffff/100x40.png?text=LIFE'">
-            <h2 style="color: #008D40; margin: 0;">モバイル レジ</h2>
+    <!-- 1. ログイン画面 -->
+    <div id="page-login" class="page active">
+        <div class="login-box">
+            <h2 style="color:var(--theme-color);">モバイルレジ</h2>
+            <p>業務を開始するには<br>電話番号を入力してください</p>
+            <input type="tel" id="input-phone" class="login-input" placeholder="090-0000-0000" value="090-1111-2222">
+            <button class="login-btn" onclick="handleLogin()">ログイン</button>
+            <p style="font-size:12px; color:#888; margin-top:20px;">
+                ※デモ用番号:<br>
+                ライフ: 090-1111-2222<br>
+                ヨーカドー: 080-3333-2222<br>
+                ドンキ: 070-5555-2222
+            </p>
+        </div>
+    </div>
+    <!-- 2. POS業務画面 -->
+    <div id="page-pos" class="page">
+        <!-- ヘッダー（企業名・店舗選択） -->
+        <div class="app-header">
+            <div class="header-logo" id="header-chain-name"></div>
+            <div class="header-info" id="header-user-info"></div>
+        </div>
+        <div class="store-selector-bar">
+            <span>店舗:</span>
+            <select id="store-select" onchange="changeStore()">
+                <!-- JSで動的に追加 -->
+            </select>
+            <button onclick="logout()" style="padding:5px 10px; font-size:12px;">ログアウト</button>
         </div>
         <div id="scanner-container">
             <video id="video"></video>
@@ -159,107 +245,146 @@
         </div>
         <div style="margin-top: 15px;">
             <button id="btn-next" class="btn next-btn" onclick="resumeScan()">✅ 確定：次をスキャン</button>
-            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ (QR表示)</button>
+            <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ</button>
         </div>
         <div class="cart-list">
-            <div class="total-price">合計: ¥<span id="total-display">0</span></div>
+            <div class="total-price"
+                style="text-align:right; font-size:24px; font-weight:bold; color:var(--theme-color);">
+                合計: ¥<span id="total-display">0</span>
+            </div>
             <div id="items"></div>
         </div>
     </div>
-    <!-- 決済ページ（QRコード提示画面） -->
+    <!-- 3. 決済画面 -->
     <div id="page-payment" class="page">
-        <div class="header">
-            <img src="2026-01-22 200607.png" alt="ライフ" class="logo"
-                onerror="this.src='https://placehold.jp/24/008d40/ffffff/100x40.png?text=LIFE'">
-            <h2 style="color: #008D40; margin: 0;">お客様ご案内</h2>
+        <div class="app-header">
+            <div class="header-logo">決済案内</div>
         </div>
         <div class="cart-list" style="text-align: center; padding: 30px 15px;">
             <p style="margin: 0; color: #666;">お支払い合計</p>
-            <div class="total-price" style="text-align: center; font-size: 42px; margin: 10px 0;">
+            <div
+                style="text-align: center; font-size: 42px; margin: 10px 0; font-weight:bold; color:var(--theme-color);">
                 ¥<span id="final-total">0</span>
             </div>
-            <!-- QRコード表示エリア -->
             <div id="qr-display-area">
                 <div id="qrcode"></div>
-                <p class="qr-instruction">お客様のスマートフォンで<br>読み取ってください</p>
+                <p style="margin-top:15px; font-weight:bold; color:var(--theme-color);">お客様用QRコード</p>
             </div>
-            <button class="btn pay-btn" onclick="location.reload()"
-                style="margin-top: 30px; background-color: #333;">次のお客様へ (最初に戻る)</button>
+            <button class="btn pay-btn" onclick="resetPos()" style="margin-top: 30px; background-color: #333;">完了
+                (最初に戻る)</button>
             <button class="btn" style="background:#ccc; margin-top: 10px;" onclick="backToScan()">戻る</button>
         </div>
     </div>
     <script src="products.js"></script>
     <script>
-        // --- バーコード限定の設定 ---
+        // --- Global State ---
+        let currentSession = null; // ログイン情報
+        let currentStoreConfig = null;
+        // --- Auth Logic ---
+        function handleLogin() {
+            const phone = document.getElementById('input-phone').value;
+            if (!phone) return alert("電話番号を入力してください");
+            // auth_config.js の authenticate関数を呼ぶ
+            const session = authenticate(phone);
+            if (session) {
+                currentSession = session;
+                initPosScreen(session);
+            } else {
+                alert("認証失敗: 登録されていない端末です。");
+            }
+        }
+        function initPosScreen(session) {
+            // 画面切り替え
+            document.getElementById('page-login').classList.remove('active');
+            document.getElementById('page-pos').classList.add('active');
+            // ヘッダー情報更新
+            document.getElementById('header-chain-name').innerText = session.chainName;
+            document.getElementById('header-user-info').innerText = `${session.deviceLabel}\nID: ${session.phoneNumber}`;
+            // 店舗リストの生成
+            const select = document.getElementById('store-select');
+            select.innerHTML = "";
+            session.availableStores.forEach(store => {
+                const opt = document.createElement('option');
+                opt.value = store.id;
+                opt.innerText = store.name;
+                select.appendChild(opt);
+            });
+            // 初回選択を反映
+            changeStore();
+            // アプリ初期化（カメラ準備など）
+            initApp();
+        }
+        function changeStore() {
+            const select = document.getElementById('store-select');
+            const storeId = select.value;
+            const storeName = select.options[select.selectedIndex].text;
+            console.log(`Store changed to: ${storeName} (${storeId})`);
+            // 将来的にstoreIdをバックエンドに送る処理などがここに入る
+        }
+        function logout() {
+            currentSession = null;
+            location.reload(); // 簡易的にリロードでログアウト
+        }
+        function resetPos() {
+            // カートクリアしてスキャン画面へ
+            total = 0;
+            cartItems = [];
+            document.getElementById('items').innerHTML = "";
+            document.getElementById('total-display').innerText = "0";
+            document.getElementById('page-payment').classList.remove('active');
+            document.getElementById('page-pos').classList.add('active');
+        }
+        // --- POS & Scanner Logic ---
         const hints = new Map();
-        const formats = [
-            ZXing.BarcodeFormat.EAN_13, // 13桁の標準バーコード
-            ZXing.BarcodeFormat.EAN_8, // 8桁の短縮バーコード
-            ZXing.BarcodeFormat.CODE_128 // その他のバーコード形式
-        ];
+        const formats = [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8];
         hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-        // ヒントを指定してリーダーを初期化
         const codeReader = new ZXing.BrowserMultiFormatReader(hints);
         let total = 0;
         let isPaused = false;
-        let cartItems = []; // カートの商品管理用
-        // --- Mock APIs ---
-        // 1. Product Info API Mock
+        let cartItems = [];
         async function mockProductApi(janCode) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 setTimeout(() => {
-                    // products.js で定義された productMaster を参照
                     if (typeof productMaster !== 'undefined' && productMaster[janCode]) {
                         resolve({ janCode, ...productMaster[janCode] });
                     } else {
-                        // 未登録商品はデフォルト値で返す
-                        resolve({
-                            janCode,
-                            name: "未登録商品",
-                            price: 200,
-                            category: "不明"
-                        });
+                        resolve({ janCode, name: "未登録商品", price: 200, category: "不明" });
                     }
-                }, 500); // 500ms delay
+                }, 300);
             });
         }
         // 決済ボタンを押した時の処理（QRコード生成）
         async function goToPayment() {
             if (total === 0) return alert("商品がありません");
-            // UI遷移: ローディング表示
             const mask = document.getElementById('mask');
-            mask.innerText = "決済QRコード作成中...";
+            mask.innerText = "QR作成中...";
             mask.style.display = 'flex';
             try {
-                // GMO Link Type Plus のURLを取得
+                // 支払い初期化 (Backend Call)
                 const initRes = await mockPaymentInitApi(cartItems, total);
-                const paymentUrl = initRes.paymentUrl;
-                // UI切り替え: 支払い画面へ
-                document.getElementById('page-scan').classList.remove('active');
+                // 画面遷移
+                document.getElementById('page-pos').classList.remove('active');
                 document.getElementById('page-payment').classList.add('active');
                 document.getElementById('final-total').innerText = total.toLocaleString();
-                // QRコード生成
+                // QR表示
                 const qrContainer = document.getElementById('qrcode');
-                qrContainer.innerHTML = ""; // クリア
+                qrContainer.innerHTML = "";
                 new QRCode(qrContainer, {
-                    text: paymentUrl,
-                    width: 256,
-                    height: 256,
+                    text: initRes.paymentUrl,
+                    width: 200, height: 200,
                     correctLevel: QRCode.CorrectLevel.M
                 });
                 mask.style.display = 'none';
             } catch (e) {
                 console.error(e);
-                alert("決済開始に失敗しました: " + e.message);
-                // エラー時はスキャン画面に戻す
+                alert("エラー: " + e.message);
                 mask.style.display = 'none';
             }
         }
         function backToScan() {
             document.getElementById('page-payment').classList.remove('active');
-            document.getElementById('page-scan').classList.add('active');
+            document.getElementById('page-pos').classList.add('active');
         }
-        // 2. Payment Init API (AWS Backend Call)
         async function mockPaymentInitApi(cartData, totalAmount) {
             const AWS_URL = 'https://c7fnqeywme.execute-api.us-east-1.amazonaws.com/default/gmo-payment-url-generator';
             try {
@@ -268,58 +393,42 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         amount: totalAmount,
-                        // GMO format fix: Pure alphanumeric, no symbols
                         orderId: "T" + Date.now()
                     })
                 });
-                if (!response.ok) {
-                    throw new Error("AWS API Connection Failed: " + response.status);
-                }
+                if (!response.ok) throw new Error("API Error");
                 return await response.json();
             } catch (e) {
-                console.warn("AWS Connection failed, falling back to mock.", e);
-                alert("AWS接続エラー: " + e.message);
-                throw e; // エラーを上に投げて呼び出し元で処理させる
+                alert("通信エラー: " + e.message);
+                throw e;
             }
         }
-        // ----------------
         async function startScanner() {
             try {
                 const videoInputDevices = await codeReader.listVideoInputDevices();
-                // 背面カメラ（Rear/Back）を優先的に探す
-                const backCamera = videoInputDevices.find(device =>
-                    device.label.toLowerCase().includes('back') ||
-                    device.label.toLowerCase().includes('rear')
-                );
+                // リアカメラ優先
+                const backCamera = videoInputDevices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
                 const deviceId = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
                 codeReader.decodeFromVideoDevice(deviceId, 'video', (result, err) => {
-                    if (result && !isPaused) {
-                        onScanSuccess(result.text);
-                    }
-                    // NotFoundException はスキャン中常に発生するので無視する
-                    if (err && !(err instanceof ZXing.NotFoundException)) {
-                        console.error(err);
-                    }
+                    if (result && !isPaused) onScanSuccess(result.text);
                 });
             } catch (err) {
-                console.error("カメラの起動に失敗しました:", err);
-                alert("カメラにアクセスできません。設定を確認してください。");
+                console.error(err);
+                // alert("カメラ起動エラー");
             }
         }
         async function onScanSuccess(code) {
-            if (isPaused) return; // 二重読み取り防止
+            if (isPaused) return;
             isPaused = true;
             const mask = document.getElementById('mask');
-            mask.innerText = "商品情報 問い合わせ中...";
+            mask.innerText = "検索中...";
             mask.style.display = 'flex';
             try {
-                // API呼び出し
                 const product = await mockProductApi(code);
                 mask.innerText = "スキャン完了";
                 document.getElementById('btn-next').style.display = 'block';
-                document.getElementById('btn-go-pay').style.display = 'block'; // 常に決済ボタンは見せておく
                 total += product.price;
-                cartItems.push(product); // カート保存
+                cartItems.push(product);
                 const row = document.createElement('div');
                 row.className = 'item-row';
                 const nameDisplay = product.name.length > 10 ? product.name.substr(0, 10) + "..." : product.name;
@@ -328,53 +437,37 @@
                         <span style="font-size:14px; color:#555;">${code}</span>
                         <span>${nameDisplay}</span>
                     </div>
-                    <span style="font-weight:bold;">¥${product.price.toLocaleString()}</span>
-                `;
+                    <span style="font-weight:bold;">¥${product.price}</span>`;
                 document.getElementById('items').prepend(row);
                 document.getElementById('total-display').innerText = total.toLocaleString();
                 if (navigator.vibrate) navigator.vibrate(100);
             } catch (error) {
-                alert("商品情報の取得に失敗しました");
-                resumeScan(); // エラー時は復帰
+                resumeScan();
             }
         }
         function resumeScan() {
             isPaused = false;
             document.getElementById('mask').style.display = 'none';
             document.getElementById('btn-next').style.display = 'none';
-            // document.getElementById('btn-go-pay').style.display = 'block';
         }
-        // デバッグ用：手動入力
-        function manualInput() {
-            const code = prompt("JANコードを入力してください（デバッグ用）", "4977634803472");
-            if (code) {
-                onScanSuccess(code);
-            }
-        }
-        // --- 初期化フロー ---
-        // ブラウザの自動再生ポリシー(バイブレーション/音声)対策として
-        // ユーザーの明示的な操作(タップ)があってからカメラを開始する
         function initApp() {
+            // カメラ起動前のタップ待ち（音声/バイブ用）
             const mask = document.getElementById('mask');
             mask.style.display = 'flex';
             mask.style.background = 'rgba(0,0,0,0.8)';
-            mask.innerHTML = '<div style="cursor:pointer; padding:20px; border:2px solid #FFD700; border-radius:8px;">📷 タップして利用を開始する</div>';
-            // マスク全体をクリックで開始
+            mask.innerHTML = '<div style="cursor:pointer; padding:20px; border:2px solid #FFD700; color:#fff; border-radius:8px;">📷 タップして業務開始</div>';
             mask.onclick = () => {
-                // 初回インタラクションでポリシー解除
                 if (navigator.vibrate) try { navigator.vibrate(0); } catch (e) { }
                 mask.style.display = 'none';
-                mask.onclick = null; // ハンドラ解除
-                mask.innerText = "スキャン完了"; // 文言戻しておく
+                mask.onclick = null;
+                mask.innerText = "スキャン完了";
                 startScanner();
             };
         }
-        // アプリ起動
-        initApp();
     </script>
-    <!-- デバッグ用ボタン -->
-    <div style="position:fixed; bottom:10px; right:10px; opacity:0.7;">
-        <button onclick="manualInput()" style="padding:10px; font-size:12px;">🛠 手動入力</button>
+</body>
+</html>
     </div>
 </body>
 </html>
+
