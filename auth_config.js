@@ -113,8 +113,8 @@ function getAdminStats() {
     };
 }
 
-        };
     }
     return null;
 }
+
 
