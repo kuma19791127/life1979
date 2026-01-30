@@ -237,6 +237,9 @@
                 <!-- JSで動的に追加 -->
             </select>
             <button onclick="logout()" style="padding:5px 10px; font-size:12px;">ログアウト</button>
+            <button onclick="showAdminStats()"
+                style="padding:5px 10px; font-size:12px; background:#333; color:white; margin-left:10px;">📊 売上確認
+                (Admin)</button>
         </div>
         <div id="scanner-container">
             <video id="video"></video>
@@ -362,6 +365,10 @@
             try {
                 // 支払い初期化 (Backend Call)
                 const initRes = await mockPaymentInitApi(cartItems, total);
+                // ★ここで取引ログを保存（売上計上）
+                // 簡易的に現在選択中のストアIDを使用
+                const selectedStoreId = document.getElementById('store-select').value;
+                logTransaction(selectedStoreId, currentSession.chainId, total, initRes.orderId);
                 // 画面遷移
                 document.getElementById('page-pos').classList.remove('active');
                 document.getElementById('page-payment').classList.add('active');
@@ -380,6 +387,17 @@
                 alert("エラー: " + e.message);
                 mask.style.display = 'none';
             }
+        }
+        function showAdminStats() {
+            const stats = getAdminStats();
+            const msg = `【今月の売上速報】\n` +
+                `----------------------------\n` +
+                `総取引件数: ${stats.count}件\n` +
+                `総流通額: ¥${stats.totalSales.toLocaleString()}\n` +
+                `----------------------------\n` +
+                `★システム手数料(1%): ¥${stats.totalFees.toLocaleString()}\n` +
+                `(これが我々の収益です)`;
+            alert(msg);
         }
         function backToScan() {
             document.getElementById('page-payment').classList.remove('active');
@@ -467,7 +485,7 @@
     </script>
 </body>
 </html>
-    </div>
 </body>
 </html>
+
 
