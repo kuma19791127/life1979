@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +17,7 @@
             --text-color: #333;
             --bg-color: #f4f4f4;
         }
+
         body {
             font-family: sans-serif;
             margin: 0;
@@ -27,6 +29,7 @@
             display: flex;
             flex-direction: column;
         }
+
         /* 共通ヘッダー */
         .app-header {
             background: var(--theme-color);
@@ -39,13 +42,16 @@
             align-items: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
+
         .header-logo {
             font-size: 20px;
         }
+
         .header-info {
             font-size: 12px;
             text-align: right;
         }
+
         /* ページ切り替え */
         .page {
             display: none;
@@ -53,9 +59,11 @@
             padding: 10px;
             overflow-y: auto;
         }
+
         .page.active {
             display: block;
         }
+
         /* ログイン画面 */
         #page-login {
             display: none;
@@ -66,9 +74,11 @@
             height: 100%;
             background: white;
         }
+
         #page-login.active {
             display: flex;
         }
+
         .login-box {
             width: 80%;
             max-width: 350px;
@@ -78,6 +88,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
+
         .login-input {
             width: 100%;
             padding: 15px;
@@ -88,6 +99,7 @@
             box-sizing: border-box;
             text-align: center;
         }
+
         .login-btn {
             background: var(--theme-color);
             color: white;
@@ -99,6 +111,7 @@
             font-weight: bold;
             cursor: pointer;
         }
+
         /* 店舗選択メニュー (Dropdown) */
         .store-selector-bar {
             background: #fff;
@@ -108,12 +121,14 @@
             justify-content: center;
             gap: 10px;
         }
+
         select {
             padding: 8px;
             font-size: 16px;
             border-radius: 4px;
             border: 1px solid #ccc;
         }
+
         /* スキャン画面 */
         #scanner-container {
             width: 100%;
@@ -126,11 +141,13 @@
             background: #000;
             aspect-ratio: 4/3;
         }
+
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
         /* スキャン枠 */
         .scan-guide {
             position: absolute;
@@ -144,6 +161,7 @@
             z-index: 5;
             border-radius: 10px;
         }
+
         #mask {
             display: none;
             position: absolute;
@@ -159,6 +177,7 @@
             font-weight: bold;
             z-index: 10;
         }
+
         /* ボタン */
         .btn {
             border: none;
@@ -170,15 +189,18 @@
             cursor: pointer;
             margin-bottom: 10px;
         }
+
         .pay-btn {
             background: var(--theme-color);
             color: white;
         }
+
         .next-btn {
             background: var(--secondary-color);
             color: #333;
             display: none;
         }
+
         /* リスト */
         .cart-list {
             margin-top: 15px;
@@ -188,12 +210,14 @@
             text-align: left;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         .item-row {
             border-bottom: 1px solid #eee;
             padding: 8px 0;
             display: flex;
             justify-content: space-between;
         }
+
         /* QRコード表示エリア */
         #qr-display-area {
             background: white;
@@ -208,7 +232,9 @@
         }
     </style>
 </head>
+
 <body>
+
     <!-- 1. ログイン画面 -->
     <div id="page-login" class="page active">
         <div class="login-box">
@@ -224,6 +250,7 @@
             </p>
         </div>
     </div>
+
     <!-- 2. POS業務画面 -->
     <div id="page-pos" class="page">
         <!-- ヘッダー（企業名・店舗選択） -->
@@ -231,25 +258,26 @@
             <div class="header-logo" id="header-chain-name"></div>
             <div class="header-info" id="header-user-info"></div>
         </div>
+
         <div class="store-selector-bar">
             <span>店舗:</span>
             <select id="store-select" onchange="changeStore()">
                 <!-- JSで動的に追加 -->
             </select>
             <button onclick="logout()" style="padding:5px 10px; font-size:12px;">ログアウト</button>
-            <button onclick="showAdminStats()"
-                style="padding:5px 10px; font-size:12px; background:#333; color:white; margin-left:10px;">📊 売上確認
-                (Admin)</button>
         </div>
+
         <div id="scanner-container">
             <video id="video"></video>
             <div class="scan-guide"></div>
             <div id="mask">スキャン完了</div>
         </div>
+
         <div style="margin-top: 15px;">
             <button id="btn-next" class="btn next-btn" onclick="resumeScan()">✅ 確定：次をスキャン</button>
             <button id="btn-go-pay" class="btn pay-btn" onclick="goToPayment()">合計金額で決済へ</button>
         </div>
+
         <div class="cart-list">
             <div class="total-price"
                 style="text-align:right; font-size:24px; font-weight:bold; color:var(--theme-color);">
@@ -258,6 +286,7 @@
             <div id="items"></div>
         </div>
     </div>
+
     <!-- 3. 決済画面 -->
     <div id="page-payment" class="page">
         <div class="app-header">
@@ -269,26 +298,32 @@
                 style="text-align: center; font-size: 42px; margin: 10px 0; font-weight:bold; color:var(--theme-color);">
                 ¥<span id="final-total">0</span>
             </div>
+
             <div id="qr-display-area">
                 <div id="qrcode"></div>
                 <p style="margin-top:15px; font-weight:bold; color:var(--theme-color);">お客様用QRコード</p>
             </div>
+
             <button class="btn pay-btn" onclick="resetPos()" style="margin-top: 30px; background-color: #333;">完了
                 (最初に戻る)</button>
             <button class="btn" style="background:#ccc; margin-top: 10px;" onclick="backToScan()">戻る</button>
         </div>
     </div>
+
     <script src="products.js"></script>
     <script>
         // --- Global State ---
         let currentSession = null; // ログイン情報
         let currentStoreConfig = null;
+
         // --- Auth Logic ---
         function handleLogin() {
             const phone = document.getElementById('input-phone').value;
             if (!phone) return alert("電話番号を入力してください");
+
             // auth_config.js の authenticate関数を呼ぶ
             const session = authenticate(phone);
+
             if (session) {
                 currentSession = session;
                 initPosScreen(session);
@@ -296,13 +331,16 @@
                 alert("認証失敗: 登録されていない端末です。");
             }
         }
+
         function initPosScreen(session) {
             // 画面切り替え
             document.getElementById('page-login').classList.remove('active');
             document.getElementById('page-pos').classList.add('active');
+
             // ヘッダー情報更新
             document.getElementById('header-chain-name').innerText = session.chainName;
             document.getElementById('header-user-info').innerText = `${session.deviceLabel}\nID: ${session.phoneNumber}`;
+
             // 店舗リストの生成
             const select = document.getElementById('store-select');
             select.innerHTML = "";
@@ -312,11 +350,14 @@
                 opt.innerText = store.name;
                 select.appendChild(opt);
             });
+
             // 初回選択を反映
             changeStore();
+
             // アプリ初期化（カメラ準備など）
             initApp();
         }
+
         function changeStore() {
             const select = document.getElementById('store-select');
             const storeId = select.value;
@@ -324,27 +365,33 @@
             console.log(`Store changed to: ${storeName} (${storeId})`);
             // 将来的にstoreIdをバックエンドに送る処理などがここに入る
         }
+
         function logout() {
             currentSession = null;
             location.reload(); // 簡易的にリロードでログアウト
         }
+
         function resetPos() {
             // カートクリアしてスキャン画面へ
             total = 0;
             cartItems = [];
             document.getElementById('items').innerHTML = "";
             document.getElementById('total-display').innerText = "0";
+
             document.getElementById('page-payment').classList.remove('active');
             document.getElementById('page-pos').classList.add('active');
         }
+
         // --- POS & Scanner Logic ---
         const hints = new Map();
         const formats = [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8];
         hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
         const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+
         let total = 0;
         let isPaused = false;
         let cartItems = [];
+
         async function mockProductApi(janCode) {
             return new Promise((resolve) => {
                 setTimeout(() => {
@@ -356,23 +403,24 @@
                 }, 300);
             });
         }
+
         // 決済ボタンを押した時の処理（QRコード生成）
         async function goToPayment() {
             if (total === 0) return alert("商品がありません");
+
             const mask = document.getElementById('mask');
             mask.innerText = "QR作成中...";
             mask.style.display = 'flex';
+
             try {
                 // 支払い初期化 (Backend Call)
                 const initRes = await mockPaymentInitApi(cartItems, total);
-                // ★ここで取引ログを保存（売上計上）
-                // 簡易的に現在選択中のストアIDを使用
-                const selectedStoreId = document.getElementById('store-select').value;
-                logTransaction(selectedStoreId, currentSession.chainId, total, initRes.orderId);
+
                 // 画面遷移
                 document.getElementById('page-pos').classList.remove('active');
                 document.getElementById('page-payment').classList.add('active');
                 document.getElementById('final-total').innerText = total.toLocaleString();
+
                 // QR表示
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = "";
@@ -381,28 +429,21 @@
                     width: 200, height: 200,
                     correctLevel: QRCode.CorrectLevel.M
                 });
+
                 mask.style.display = 'none';
+
             } catch (e) {
                 console.error(e);
                 alert("エラー: " + e.message);
                 mask.style.display = 'none';
             }
         }
-        function showAdminStats() {
-            const stats = getAdminStats();
-            const msg = `【今月の売上速報】\n` +
-                `----------------------------\n` +
-                `総取引件数: ${stats.count}件\n` +
-                `総流通額: ¥${stats.totalSales.toLocaleString()}\n` +
-                `----------------------------\n` +
-                `★システム手数料(1%): ¥${stats.totalFees.toLocaleString()}\n` +
-                `(これが我々の収益です)`;
-            alert(msg);
-        }
+
         function backToScan() {
             document.getElementById('page-payment').classList.remove('active');
             document.getElementById('page-pos').classList.add('active');
         }
+
         async function mockPaymentInitApi(cartData, totalAmount) {
             const AWS_URL = 'https://c7fnqeywme.execute-api.us-east-1.amazonaws.com/default/gmo-payment-url-generator';
             try {
@@ -421,12 +462,14 @@
                 throw e;
             }
         }
+
         async function startScanner() {
             try {
                 const videoInputDevices = await codeReader.listVideoInputDevices();
                 // リアカメラ優先
                 const backCamera = videoInputDevices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
                 const deviceId = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
+
                 codeReader.decodeFromVideoDevice(deviceId, 'video', (result, err) => {
                     if (result && !isPaused) onScanSuccess(result.text);
                 });
@@ -435,18 +478,23 @@
                 // alert("カメラ起動エラー");
             }
         }
+
         async function onScanSuccess(code) {
             if (isPaused) return;
             isPaused = true;
             const mask = document.getElementById('mask');
             mask.innerText = "検索中...";
             mask.style.display = 'flex';
+
             try {
                 const product = await mockProductApi(code);
+
                 mask.innerText = "スキャン完了";
                 document.getElementById('btn-next').style.display = 'block';
+
                 total += product.price;
                 cartItems.push(product);
+
                 const row = document.createElement('div');
                 row.className = 'item-row';
                 const nameDisplay = product.name.length > 10 ? product.name.substr(0, 10) + "..." : product.name;
@@ -458,22 +506,27 @@
                     <span style="font-weight:bold;">¥${product.price}</span>`;
                 document.getElementById('items').prepend(row);
                 document.getElementById('total-display').innerText = total.toLocaleString();
+
                 if (navigator.vibrate) navigator.vibrate(100);
+
             } catch (error) {
                 resumeScan();
             }
         }
+
         function resumeScan() {
             isPaused = false;
             document.getElementById('mask').style.display = 'none';
             document.getElementById('btn-next').style.display = 'none';
         }
+
         function initApp() {
             // カメラ起動前のタップ待ち（音声/バイブ用）
             const mask = document.getElementById('mask');
             mask.style.display = 'flex';
             mask.style.background = 'rgba(0,0,0,0.8)';
             mask.innerHTML = '<div style="cursor:pointer; padding:20px; border:2px solid #FFD700; color:#fff; border-radius:8px;">📷 タップして業務開始</div>';
+
             mask.onclick = () => {
                 if (navigator.vibrate) try { navigator.vibrate(0); } catch (e) { }
                 mask.style.display = 'none';
@@ -484,8 +537,5 @@
         }
     </script>
 </body>
-</html>
-</body>
-</html>
 
-
+</html>
