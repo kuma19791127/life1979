@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>どこでもレジ | 行列をゼロにするモバイルPOS</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Poppins:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --accent: #F59E0B;
+            --dark: #111827;
+            --light: #F3F4F6;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--dark);
+            background: var(--white);
+            line-height: 1.6;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+            color: white;
+            padding: 80px 20px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: white;
+            transform: skewY(-3deg);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 900;
+            margin: 0 0 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .btn-cta {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .btn-cta:hover {
+            transform: scale(1.05);
+        }
+
+        /* Problem Section */
+        .section {
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 50px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            margin: 15px auto 0;
+        }
+
+        .problem-box {
+            background: #FEF2F2;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .problem-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #DC2626;
+        }
+
+        /* Solution Section */
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            width: 300px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: left;
+            border-top: 5px solid var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        /* Demo Section */
+        .demo-area {
+            background: var(--light);
+            padding: 80px 20px;
+        }
+
+        .mockup {
+            background: white;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            border-radius: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .mockup-img {
+            flex: 1;
+            min-width: 300px;
+            background: #ddd;
+            /* Image Placeholder */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #888;
+            min-height: 400px;
+            background: url('https://placehold.co/400x400/2563eb/white?text=Demo+UI') center/cover;
+        }
+
+        .mockup-content {
+            flex: 1;
+            padding: 50px;
+            text-align: left;
+            min-width: 300px;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer-link {
+            color: white;
+            margin: 0 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .feature-card {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="hero">
+        <div style="font-size:60px; margin-bottom:10px;">⚡</div>
+        <h1>Anywhere Register</h1>
+        <p>お店の行列を、ゼロにする。<br>スマホひとつで始める次世代モバイルPOS。</p>
+        <a href="index.html" class="btn-cta">今すぐデモを試す</a>
+        <p style="font-size:12px; margin-top:20px; opacity:0.8;">※初期費用 0円 / 最短即日導入</p>
+    </header>
+
+    <section class="section">
+        <h2 class="section-title">こんなお悩みありませんか？</h2>
+        <div class="problem-box">
+            <p class="problem-text">「レジ待ちの行列で、お客様が帰ってしまう...」</p>
+            <p style="margin-top:20px;">年末商戦、イベント、特売日。売れるチャンスなのに、レジが足りない。<br>でも、数回のために数百万円のレジは買えない。</p>
+        </div>
+    </section>
+
+    <section class="section" style="background: white;">
+        <h2 class="section-title">「どこでもレジ」が解決します</h2>
+        <div class="features">
+            <div class="feature-card">
+                <span class="feature-icon">📱</span>
+                <h3 class="feature-title">専用端末不要</h3>
+                <p>店員のスマホやレンタル端末が、その場ですぐにレジに変わります。アプリのインストールすら不要です。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🏢</span>
+                <h3 class="feature-title">複数店舗に対応</h3>
+                <p>電話番号認証で、自動的に所属チェーンの設定を読み込みます。全店舗統一のオペレーションが可能です。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💸</span>
+                <h3 class="feature-title">導入コスト 1/10</h3>
+                <p>初期費用は0円。使った分だけの手数料モデルなので、リスクなく導入できます。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section demo-area">
+        <h2 class="section-title">Technology</h2>
+        <div class="mockup">
+            <div class="mockup-img"></div>
+            <div class="mockup-content">
+                <h3>最新のWeb技術を結集</h3>
+                <ul style="padding-left: 20px; margin-top: 20px;">
+                    <li style="margin-bottom:10px;"><strong>ブラウザスキャン:</strong> 高性能なバーコード読み取りエンジンを搭載。</li>
+                    <li style="margin-bottom:10px;"><strong>クラウド連携:</strong> AWS Lambdaによるセキュアな決済処理。</li>
+                    <li style="margin-bottom:10px;"><strong>リアルタイム売上:</strong> 管理画面で収益を瞬時に可視化。</li>
+                </ul>
+                <div style="margin-top: 30px;">
+                    <a href="https://kuma19791127.github.io/life1979/"
+                        style="color:var(--primary); font-weight:700;">GitHub Demo Page &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2026 Anywhere Register Project.</p>
+        <p>お問い合わせ: support@example.com</p>
+    </footer>
+
+</body>
+
+</html>
